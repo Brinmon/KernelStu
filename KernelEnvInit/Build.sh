@@ -12,5 +12,5 @@ sed -i 's/^\(CONFIG_SYSTEM_TRUSTED_KEYS=\).*/\1""/' .config
 cp .config .config.bak
 
 
-#最后多核编译就可以了,15.44开始的
+#最后多核编译就可以了
 make -j$(nproc) bzImage

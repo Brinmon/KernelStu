@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 输出文件名
-OUTPUT_FILE="../rootfs.cpio"
+OUTPUT_FILE="./rootfs.cpio"
 
 # 使用 find 和 cpio 打包
 find . | cpio -o --format=newc > "$OUTPUT_FILE"

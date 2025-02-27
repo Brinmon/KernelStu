@@ -9,3 +9,122 @@ BaseImageEnv/usr/
 BaseImageEnv/etc
 linuxrc
 rootfs.cpio
+rootfs_new.cpio
+bzImage
+tmp/
+
+/KernelVuln/Kernel_ROP_basic/give_to_player
+/KernelVuln/Kernel_ROP_basic/tmp
+qemu_log.txt
+core_give.tar
+
+# 内核驱动项目 .gitignore 模板
+
+# 编译生成的文件
+*.o
+*.ko
+*.mod.c
+*.mod.o
+*.order
+*.symvers
+*.cmd
+*.dwo
+*.a
+*.so
+*.bin
+*.elf
+
+# 内核构建目录
+Module.symvers
+modules.order
+.tmp_versions/
+*.mod
+*.ko.*
+*.unsigned
+
+# 内核配置文件
+.config
+.config.old
+auto.conf
+autoconf.h
+include/config/
+include/generated/
+
+# 内核构建缓存
+.cache.mk
+*.cache
+*.mk
+*.mk.tmp
+
+# 调试文件
+*.gdb
+*.gdblist
+*.debug
+*.dwarf
+*.map
+
+# 日志文件
+*.log
+*.out
+*.err
+
+# 编辑器临时文件
+*~
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+
+# IDE 配置文件
+.vscode/
+.idea/
+*.code-workspace
+
+# 用户空间工具生成的文件
+*.user
+*.su
+*.stackdump
+
+# 内核源码树中的临时文件
+scripts/basic/fixdep
+scripts/kconfig/conf
+scripts/kconfig/mconf
+scripts/kconfig/zconf.*
+scripts/mod/modpost
+scripts/sign-file
+scripts/basic/bin2c
+scripts/kallsyms
+scripts/recordmcount
+
+# 其他临时文件
+*.orig
+*.rej
+*.patch
+*.diff
+
+# 内核文档生成的文件
+Documentation/DocBook/
+Documentation/output/
+Documentation/lockdep-design.txt
+Documentation/RCU/Design/Requirements/Requirements.html
+
+# 内核测试文件
+tools/testing/selftests/
+tools/testing/ktest/
+tools/testing/kselftest/
+
+# 内核源码树中的工具生成文件
+tools/objtool/arch/x86/lib/inat-tables.c
+tools/objtool/arch/x86/lib/insn.c
+tools/objtool/arch/x86/lib/insn.h
+tools/objtool/arch/x86/lib/inat.c
+tools/objtool/arch/x86/lib/inat.h
+
+# 内核源码树中的其他生成文件
+arch/*/boot/
+arch/*/include/generated/
+arch/*/kernel/vdso/
+arch/*/lib/
+arch/*/mm/
+arch/*/tools/
