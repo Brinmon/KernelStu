@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e  # 遇到错误立即退出
+set -eo pipefail  # 增强错误检查
 
 # 记录当前工作目录
 current_dir=$(pwd)
@@ -7,18 +7,21 @@ current_dir=$(pwd)
 # 检查参数
 if [ $# -eq 0 ]; then
     echo "用法: $0 <文件1> <文件2> ..."
+    echo "特殊处理："
+    echo "  - 文件名若为 init 自动替换系统初始化脚本"
+    echo "  - 文件名若为 rcS 自动替换启动脚本"
     exit 1
 fi
 
 # 创建临时目录
 temp_dir=$(mktemp -d)
-echo "使用临时目录: $temp_dir"
-trap 'rm -rf "$temp_dir"' EXIT  # 退出时自动清理
+echo "[临时目录] 创建于：$temp_dir"
+trap 'rm -rf "$temp_dir"' EXIT
 
-# 解压原始镜像到临时目录
-echo "解压磁盘镜像..."
+# 解压原始镜像
+echo "[解压] 正在解压 rootfs.cpio..."
 if [ ! -f ./rootfs.cpio ]; then
-    echo "错误: rootfs.cpio 文件不存在"
+    echo "[错误] 找不到 rootfs.cpio 文件" >&2
     exit 1
 fi
 cpio -idmv < ./rootfs.cpio  -D "$temp_dir" || {
@@ -26,60 +29,99 @@ cpio -idmv < ./rootfs.cpio  -D "$temp_dir" || {
     exit 1
 }
 
+declare -A special_files=(
+    ["init"]="$temp_dir/init"
+    ["rcS"]="$temp_dir/etc/init.d/rcS"
+)
+
 has_ko=false
 ko_files=()
+processed_special=()
 
-# 复制文件并记录.ko文件
-echo "添加文件到临时目录..."
+# 文件处理流程
+echo "[文件处理] 开始处理输入文件..."
 for file in "$@"; do
-    if [ -f "$file" ]; then
-        if cp -vL "$file" "$temp_dir/"; then
-            if [[ "$file" == *.ko ]]; then
-                has_ko=true
-                ko_files+=("$(basename "$file")")
-            fi
+    # 验证文件存在性
+    if [ ! -f "$file" ]; then
+        echo "[警告] 忽略不存在的文件: $file" >&2
+        continue
+    fi
+
+    filename=$(basename "$file")
+    target_path=""
+
+    # 特殊文件处理
+    if [[ -v special_files[$filename] ]]; then
+        target_path=${special_files[$filename]}
+        echo "[特殊文件] 检测到系统脚本: $filename"
+        echo "          目标路径: ${target_path#$temp_dir}"
+        
+        # 创建目标目录
+        mkdir -p "$(dirname "$target_path")"
+        
+        # 保留原文件属性
+        if cp -v --preserve=all "$file" "$target_path"; then
+            chmod +x "$target_path"  # 确保可执行
+            processed_special+=("$filename")
+            continue
         else
-            echo "警告: 复制 $file 失败，跳过。"
+            echo "[错误] 复制特殊文件失败: $file" >&2
+            exit 1
         fi
+    fi
+
+    # 内核模块处理
+    if [[ "$filename" == *.ko ]]; then
+        has_ko=true
+        ko_files+=("$filename")
+        target_path="$temp_dir/$filename"
     else
-        echo "警告: 文件 $file 不存在，跳过。"
+        target_path="$temp_dir/$filename"
+    fi
+
+    # 普通文件复制
+    if cp -vL --preserve=all "$file" "$target_path"; then
+        echo "[成功] 已添加文件: $filename"
+    else
+        echo "[错误] 文件复制失败: $file" >&2
+        exit 1
     fi
 done
 
-# 处理.ko文件
-if $has_ko; then
-    echo "检测到内核模块，修改启动脚本..."
+# 内核模块处理（当没有自定义 rcS 时）
+if $has_ko && [[ ! " ${processed_special[@]} " =~ " rcS " ]]; then
+    echo "[内核模块] 检测到 .ko 文件，生成启动脚本..."
     rcs_path="$temp_dir/etc/init.d/rcS"
     
-    # 确保目录存在
+    # 创建目录结构
     mkdir -p "$(dirname "$rcs_path")"
     
-    # 创建并写入rcS内容
+    # 生成启动脚本
     {
         echo "#!/bin/sh"
-        echo "echo \"INIT SCRIPT\""
+        echo "echo '==== 系统启动中 ===='"
         echo "mount -t proc none /proc"
         echo "mount -t sysfs none /sys"
         echo "mount -t devtmpfs none /dev"
         echo "mount -t debugfs none /sys/kernel/debug"
         echo "mount -t tmpfs none /tmp"
-        echo "echo -e \"Boot took \$(cut -d' ' -f1 /proc/uptime) seconds\""
+        echo "echo -e \"启动耗时: \$(awk '{print \$1}' /proc/uptime) 秒\""
+        
         for ko in "${ko_files[@]}"; do
-            echo "insmod /$ko && echo '已加载模块: $ko' || echo '加载失败: $ko'"
+            echo "if insmod /$ko; then"
+            echo "    echo '成功加载内核模块: $ko'"
+            echo "else"
+            echo "    echo '加载失败: $ko' >&2"
+            echo "fi"
         done
-        #进入交互式 shell
-        #1.以普通用户启动交互窗口
-        # echo "setsid /bin/cttyhack setuidgid 1000 /bin/sh"
-        #2.以root用户启动交互窗口
+        
         echo "setsid /bin/cttyhack setuidgid 0 /bin/sh"
-
-        # 关机
-        # echo "poweroff -f"
+        echo "echo '正在关机...'"
+        echo "poweroff -f"
     } > "$rcs_path"
 
-    # 确保可执行权限
     chmod +x "$rcs_path"
-    echo "已修改启动脚本：$rcs_path"
+    echo "[生成脚本] 启动脚本已创建于 /etc/init.d/rcS"
 fi
 
 # 重新打包镜像到当前目录

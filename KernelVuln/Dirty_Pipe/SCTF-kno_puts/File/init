@@ -1,0 +1,42 @@
+#!/bin/sh
+
+[ -d /dev ] || mkdir -m 0755 /dev
+[ -d /sys ] || mkdir /sys
+[ -d /proc ] || mkdir /proc
+[ -d /tmp ] || mkdir /tmp
+[ -d /etc ] || mkdir /etc
+
+mount -t proc -o nodev,noexec,nosuid proc /proc
+mount -t sysfs -o nodev,noexec,nosuid sysfs /sys
+mount -t devtmpfs -o nosuid,mode=0755 udev /dev
+mount -t tmpfs tmpfs /tmp
+
+mkdir -p /dev/pts
+mkdir -p /var/lock
+mount -t devpts -o noexec,nosuid,gid=5,mode=0620 devpts /dev/pts || true
+
+ln -sf /proc/mounts /etc/mtab
+
+echo 1 > /proc/sys/kernel/kptr_restrict
+echo 1 > /proc/sys/kernel/dmesg_restrict
+echo 1 > /proc/sys/kernel/perf_event_paranoid
+echo 1 > /proc/sys/vm/unprivileged_userfaultfd
+
+
+mdev -s
+chown 0:1000 /dev/console
+chown 0:1000 /dev/ptmx
+chown 0:1000 /dev/tty
+
+# 关键修改点1：将flag文件所有者改为root
+chown 0:0 flag
+# 关键修改点2：设置只有root可读写，其他用户只可读 (644权限)
+chmod 644 flag
+
+
+insmod /test.ko
+mknod -m 666 /dev/ksctf c `grep ksctf /proc/devices | awk '{print $1;}'` 0
+
+setsid /bin/cttyhack setuidgid 1000 /bin/sh
+
+poweroff -d 600 -f

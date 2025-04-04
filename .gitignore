@@ -2,6 +2,8 @@ linux-5.11/
 busybox-1.33.0/
 linux-5.11.tar.xz
 busybox-1.33.0.tar.bz2
+linux-5.8.1/
+linux-5.8.1.tar.gz
 
 BaseImageEnv/bin/
 BaseImageEnv/sbin/
@@ -12,12 +14,16 @@ rootfs.cpio
 rootfs_new.cpio
 bzImage
 tmp/
+noread
 
+
+KernelVuln/Dirty_Pipe/Kernel_Linux5.8.1/vmlinux
 /KernelVuln/Kernel_ROP_basic/give_to_player
 /KernelVuln/Kernel_ROP_basic/tmp
 qemu_log.txt
 core_give.tar
-
+exp
+dp0day
 # 内核驱动项目 .gitignore 模板
 
 # 编译生成的文件

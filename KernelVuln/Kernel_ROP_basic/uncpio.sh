@@ -1,1 +1,1 @@
-gunzip -c /home/ub20/KernelStu/KernelVuln/Kernel_ROP_basic/give_to_player/core.cpio | cpio -idmv
+gunzip -c ./core.cpio | cpio -idmv

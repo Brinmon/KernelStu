@@ -1,0 +1,17 @@
+#!/bin/sh
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t devtmpfs devtmpfs /dev
+mount -t tmpfs tmpfs /tmp
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
+
+echo -e "\nBoot took $(cut -d' ' -f1 /proc/uptime) seconds\n"
+
+# 创建文件并设置权限（root可读写，其他用户只读）
+echo "This is a secret file!" > /secret.txt
+chmod 644 /secret.txt  # 644 = rw-r--r--
+chown root:root /secret.txt
+
+setsid cttyhack setuidgid 1000 sh
+poweroff -d 0 -f
