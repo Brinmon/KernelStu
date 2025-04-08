@@ -1,14 +1,9 @@
-基于项目的结构，我为您编写一个综合的README.md文件：
-
-```markdown
 # Linux Kernel Vulnerability Research Environment
 
 这是一个用于Linux内核漏洞分析与调试的集成研究环境，包含内核构建工具链、漏洞利用示例、QEMU调试环境等完整研究基础设施。
 
 ## 项目结构
-
-```
-.
+```bash
 ├── BaseImageEnv/          # 基础镜像环境构建
 │   ├── rootfs.cpio        # 预编译的根文件系统
 │   └── envinit.sh         # 环境初始化脚本
@@ -34,7 +29,7 @@
 ├── RunQemu/               # QEMU运行配置
 │   ├── start.sh           # 虚拟机启动脚本
 │   └── gdb.sh             # GDB调试脚本
-└── ...
+
 ```
 
 ## 快速开始
@@ -92,7 +87,7 @@ make && ./Dirty-Pipe.sh
 
 ## 许可证
 本项目采用 GPL-3.0 许可证，部分子组件可能遵循其原始许可证，详见各目录内LICENSE文件。
-```
+
 
 这个README设计特点：
 1. 层级清晰的结构说明
