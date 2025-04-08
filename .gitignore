@@ -15,7 +15,7 @@ rootfs_new.cpio
 bzImage
 tmp/
 noread
-
+exploit
 
 KernelVuln/Dirty_Pipe/Kernel_Linux5.8.1/vmlinux
 /KernelVuln/Kernel_ROP_basic/give_to_player
